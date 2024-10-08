@@ -42,53 +42,142 @@ request()
 ```
 
 ## Routes
-* `exportSuppliersRecords`: `POST` - Receives an object and return a .xlsx formatting materials by suppliers
+* `export`: `POST` - Receives an object and return a .xlsx
+
 ```json
 {
-   {
   "filename":"Plan1.xlsx",
   "sheets":[
-  {
-    "sheetName":"planilha1",
-    "headers":[
-      {
+    {
+      "sheetName":"planilha1",
+      "headers":[
+        {
+          "blocks":[
+            {
+              "message":"REGISTRO DE ABASTECIMENTOS",
+              "colBegin":"A1",
+              "colEnd":"k1",
+             "format":{
+              "bold":1,
+              "border":1,
+              "align":"center",
+              "bg_color":"#FF0000"
+             }
+            }
+          ]
+        },
+        {
         "blocks":[
           {
-            "message":"REGISTRO DE ABASTECIMENTOS",
-            "colBegin":"A1",
-            "colEnd":"k1",
+            "message":"PERIODO: 01/06/2024 Á 06/09/2024",
+            "colBegin":"A2",
+            "colEnd":"C2",
             "format":{
+              "bold":1,
+              "border":1,
+              "align":"center",
               "bg_color":"#FF0000"
             }
           }
         ]
       },
-    ],
-    "recordHeader":[
       {
-        "nameHeader":"Posto",
-        "formatHeader":{
-          "border":1
+        
+      }
+      ],
+      "recordHeader":[
+        {
+          "nameHeader":"Posto",
+          "formatHeader":{
+            "border":1
+          }
         },
-      },
-      {
-        "nameHeader":"Data de abetura",
-        "formatHeader":{},
-      },
-      {
-        "nameHeader":"Equipamento",
-        "formatHeader":{},
-      },
-    ],
+        {
+          "nameHeader":"Data de abetura",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Equipamento",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Tipo de Consumo",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Contador atual",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Contador anterior",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Combustivel",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Quantidade",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Consumo realizado",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"Preço Litro",
+          "formatHeader":{
+            
+          }
+        },
+        {
+          "nameHeader":"VLR Total",
+          "formatHeader":{
+            
+          }
+        }
+      ],
       "recordsFormat":[
-          {},
-          {"bg_color": "#FFFF00"},
-          {"bg_color": "#FFFF00"},
+        {
+          "font_color":"red"
+        },
+        {
+          "font_color":"yellow"
+        },
+        {
+          "font_color":"blue"
+        }
       ],
       "records":[
-      ["Posto 1","01/06/2024","Equipamento A"]
-   ]   
-  }
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "d",
+          "e",
+          "f"
+        ]
+      ]
+    }
+  ]
 }
 ```
 

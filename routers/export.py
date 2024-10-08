@@ -4,8 +4,8 @@ from .service.export_xlsx import export_record
 
 router = APIRouter()
 
-@router.post("/exportRecords")
-async def post_export_record(request: Request):
+@router.post("/export")
+async def export_xlsx(request: Request):
     try:
         response = await request.json()
     except:

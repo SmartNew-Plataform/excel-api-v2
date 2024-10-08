@@ -1,0 +1,35 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Excel API",
+        "description":"Gera um arquivo .xlsx por meio de um json",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Rota root, rota de bem vindos",
+                "operationId": "Welcome",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response"
+                    }
+                }
+            }
+        },
+        "/export": {
+            "get": {
+                "summary": "Endpoint geracao de arquivo xlxs",
+                "operationId": "Export",
+                "responses": {
+                    "200": {
+                        "description": "Arquivo retornado com sucesso"
+                    },
+                    "404": {
+                        "description": "Erro geração do arquivo"
+                    }
+                }
+            }
+        }
+    }
+}
