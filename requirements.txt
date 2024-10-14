@@ -3,3 +3,4 @@ fastapi
 jsonify
 pyyaml
 pandas
+openpyxl
