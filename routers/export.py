@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse
-from .service.export_xlsx import export_record
-from .service.export_xlsx_unified import export_record_unified
+from service.export_xlsx import export_record
+from service.export_xlsx_unified import export_record_unified
 router = APIRouter()
 
 @router.post("/export")

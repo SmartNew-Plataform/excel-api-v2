@@ -1,7 +1,6 @@
 import jsonify
 import xlsxwriter
 import io
-import json
 from io import BytesIO
 
 from starlette.responses import StreamingResponse
