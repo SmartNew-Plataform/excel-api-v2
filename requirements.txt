@@ -2,3 +2,4 @@ xlsxwriter
 fastapi
 jsonify
 pyyaml
+pandas

@@ -3,7 +3,7 @@
     "info": {
         "title": "Excel API",
         "description":"Gera um arquivo .xlsx por meio de um json",
-        "version": "0.1.0"
+        "version": "0.2.0"
     },
     "paths": {
         "/": {
@@ -20,6 +20,20 @@
         "/export": {
             "get": {
                 "summary": "Endpoint geracao de arquivo xlxs",
+                "operationId": "Export",
+                "responses": {
+                    "200": {
+                        "description": "Arquivo retornado com sucesso"
+                    },
+                    "404": {
+                        "description": "Erro geração do arquivo"
+                    }
+                }
+            }
+        },
+        "/export-unified": {
+            "get": {
+                "summary": "Endpoint geracao de arquivo xlxs para varios tabelas em uma pagina",
                 "operationId": "Export",
                 "responses": {
                     "200": {

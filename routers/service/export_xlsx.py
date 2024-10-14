@@ -1,25 +1,19 @@
 import jsonify
 import xlsxwriter
 import io
+import json
+from io import BytesIO
+
 from starlette.responses import StreamingResponse
 
 def export_record(response):   
 
     try:
-
-        validResponse(response)
-
         filename = response['filename']
-        
-        output = io.BytesIO()
-        wb = xlsxwriter.Workbook(output, {'in_memory': True})    
 
-        createSheets(wb,response['sheets'])
-        
-        wb.close()    
-        output.seek(0)
-    
-        return StreamingResponse(output, 
+        output = get_output(response)
+
+        return StreamingResponse(output,
                                  media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                                  headers={"Content-Disposition": f"attachment; filename={filename}"})
     except Exception as e:
@@ -29,6 +23,21 @@ def export_record(response):
             "error": str(e),
             "status": "400"
         }, 400)
+
+def get_output(response) -> BytesIO:
+
+    validResponse(response)
+
+    output = io.BytesIO()
+
+    wb = xlsxwriter.Workbook(output, {'in_memory': True})
+
+    createSheets(wb, response['sheets'])
+
+    wb.close()
+    output.seek(0)
+
+    return output
 
 def createSheets(wb,sheets):
     for sheet in sheets:
@@ -45,8 +54,11 @@ def createRecord(wb,ws,recordsFormat,idRowRecords,indexRecord,record):
     line = idRowRecords + indexRecord
     
     for col, itemRecord in enumerate(record):
-        format = formatCell(wb,recordsFormat[col])
-        ws.write(line, col, itemRecord, format)
+        format = recordsFormat[col]
+        formatWb = formatCell(wb,format)
+        
+        ws.write(line, col, itemRecord, formatWb)
+        
         
 def createRecords(wb,ws,idRowRecords,records,recordsFormat):
     for index, record in enumerate(records):
