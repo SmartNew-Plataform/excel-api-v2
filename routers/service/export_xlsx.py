@@ -1,6 +1,7 @@
 import jsonify
 import xlsxwriter
 import io
+import json
 from io import BytesIO
 
 from starlette.responses import StreamingResponse
@@ -48,15 +49,41 @@ def formatCell(wb,format):
     
     return wb.add_format(format)
 
+
+def checkFormat(value, old_format):
+
+    if (
+            isinstance(value, dict) == False
+            or 'format' not in value
+            or 'value' not in value
+            or 'tags' not in value
+    ):
+        return value, old_format, None
+
+
+    new_value = value['value']
+    new_format = value['format']
+
+    if old_format is not None:
+        old_format.update(new_format)
+        new_format = old_format
+
+    return new_value, new_format, None
+
 def createRecord(wb,ws,recordsFormat,idRowRecords,indexRecord,record):
     
     line = idRowRecords + indexRecord
     
     for col, itemRecord in enumerate(record):
-        format = recordsFormat[col]
+        value = itemRecord
+        format = json.loads(json.dumps(recordsFormat[col]))
+        tags = None
+        print(1, value, format)
+        value, format, tags = checkFormat(value, format)
+        print(2,value, format)
         formatWb = formatCell(wb,format)
         
-        ws.write(line, col, itemRecord, formatWb)
+        ws.write(line, col, value, formatWb)
         
         
 def createRecords(wb,ws,idRowRecords,records,recordsFormat):
