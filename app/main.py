@@ -3,14 +3,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
 
-from routers import export, home
+from app.routers import export, home
 
 app = FastAPI()
 
 
 # documentation
 def get_openapi_spec():
-    with open("openapi.json", "r") as file:
+    with open("./openapi.json", "r") as file:
         return yaml.safe_load(file)
 
 app.openapi_schema = get_openapi_spec()

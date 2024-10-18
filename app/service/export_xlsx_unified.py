@@ -7,6 +7,7 @@ from starlette.responses import StreamingResponse
 from .export_xlsx import get_output
 
 
+
 def export_record_unified(response):
     output = get_output(response)
     filename = 'Planilha'

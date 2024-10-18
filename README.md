@@ -8,9 +8,9 @@ pip3 install -r requirements.txt
 
 ## Usage
 ```
-uvicorn main:app
+uvicorn app.main:app --reload
 ```
-The API will be running at `http://localhost:5000`
+The API will be running at `http://localhost:8000`
 
 ### Request Example
 ```js
