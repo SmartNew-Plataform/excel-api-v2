@@ -8,7 +8,7 @@ pip3 install -r requirements.txt
 
 ## Usage
 ```
-uvicorn app.main:app --reload
+`uvicorn app.main:app --reload`
 ```
 The API will be running at `http://localhost:8000`
 

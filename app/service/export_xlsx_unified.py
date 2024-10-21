@@ -116,5 +116,6 @@ def __copy_cell_style(source_cell, target_cell):
             shrink_to_fit=source_cell.alignment.shrink_to_fit,
             indent=source_cell.alignment.indent
         )
-
+    if source_cell.number_format:
+        target_cell.number_format = source_cell.number_format
 
