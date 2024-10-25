@@ -47,7 +47,7 @@ def export_record_unified(response):
             row_offset +=2
 
         cell = unified_worksheet.cell(row=row_offset, column=1, value=f"{sheet_name}")
-        cell.border = border
+        
         cell.font = bold_font
         cell.alignment = alignment
 
