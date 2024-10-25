@@ -1,11 +1,14 @@
 import jsonify
 import xlsxwriter
+import xlsxwriter.utility as xl_util
 import io
 import json
 from io import BytesIO
 
+
 from starlette.responses import StreamingResponse
 from app.service.tags.tags import add_tags
+from app.service.tags_cell.tags_cell import add_tags_cell
 
 def export_record(response):   
 
@@ -108,12 +111,18 @@ def createRecord(wb,ws,records_format,id_row_records,index_record,record,format_
             value = item_record
             format = json.loads(json.dumps(records_format[col-1]))
             format = __update_format(format_row, format)
-            tags = None
-            value, format, tags = checkFormat(value, format)
+
+            tags_cell = None
+            value, format, tags_cell = checkFormat(value, format)
+
             format_wb = formatCell(wb,format)
 
             ws.write(line, col-1, value, format_wb)
-        
+
+            if tags_cell is not None:
+                cell_index = xl_util.xl_rowcol_to_cell(line,col-1)
+                add_tags_cell(wb,ws,cell_index,line,col-1,tags_cell)
+                       
         
 def createRecords(wb,ws,id_row_records,records,records_format,format_table):
     for index, record in enumerate(records):
@@ -128,6 +137,10 @@ def createRecordHeader(wb,ws,id_row_records,id_col,record_header,format_table_to
     format_wb = formatCell(wb,format_header)
 
     ws.write(id_row_records, id_col, record_header['nameHeader'],format_wb)
+
+    if 'tags' in record_header:
+        cell_index = xl_util.xl_rowcol_to_cell(id_row_records,id_col)
+        add_tags_cell(wb,ws,cell_index,id_row_records,id_col,record_header['tags'])
     
 def createRecordHeaders(wb,ws,idRowRecords,recordHeaders,format_table_top):
     for index, recordHeader in enumerate(recordHeaders):
