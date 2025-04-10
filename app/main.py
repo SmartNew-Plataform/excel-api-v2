@@ -14,8 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(home.router)   # Inclui a rota GET "/"
-app.include_router(export.router) # Deve incluir as rotas POST "/api/v1/export" e "/api/v1/export-unified"
+app.include_router(home.router)  
+app.include_router(export.router)
 
 def get_openapi_spec():
     with open("./openapi.json", "r") as file:
