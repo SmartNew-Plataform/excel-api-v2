@@ -2,7 +2,7 @@
     "openapi": "3.1.0",
     "info": {
         "title": "Excel API",
-        "description":"Gera um arquivo .xlsx por meio de um json",
+        "description": "Gera um arquivo .xlsx por meio de um json",
         "version": "0.2.0"
     },
     "paths": {
@@ -17,30 +17,154 @@
                 }
             }
         },
-        "/export": {
-            "get": {
+        "/api/v1/export": {
+            "post": {
                 "summary": "Endpoint geracao de arquivo xlxs",
                 "operationId": "Export",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["filename", "sheets"],
+                                "properties": {
+                                    "filename": {
+                                        "type": "string",
+                                        "description": "Nome do arquivo Excel (ex.: 'teste.xlsx')"
+                                    },
+                                    "sheets": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["sheetName"],
+                                            "properties": {
+                                                "sheetName": {
+                                                    "type": "string",
+                                                    "description": "Nome da planilha"
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Arquivo retornado com sucesso"
+                        "description": "Arquivo retornado com sucesso",
+                        "content": {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
                     },
-                    "404": {
-                        "description": "Erro geração do arquivo"
+                    "400": {
+                        "description": "Erro na validação do payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno no servidor"
                     }
                 }
             }
         },
-        "/export-unified": {
-            "get": {
+        "/api/v1/export-unified": {
+            "post": {
                 "summary": "Endpoint geracao de arquivo xlxs para varios tabelas em uma pagina",
-                "operationId": "Export",
+                "operationId": "ExportUnified",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["filename", "sheets"],
+                                "properties": {
+                                    "filename": {
+                                        "type": "string",
+                                        "description": "Nome do arquivo Excel (ex.: 'teste.xlsx')"
+                                    },
+                                    "sheets": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["sheetName"],
+                                            "properties": {
+                                                "sheetName": {
+                                                    "type": "string",
+                                                    "description": "Nome da planilha"
+                                                },
+                                                "records": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Arquivo retornado com sucesso"
+                        "description": "Arquivo retornado com sucesso",
+                        "content": {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
                     },
-                    "404": {
-                        "description": "Erro geração do arquivo"
+                    "400": {
+                        "description": "Erro na validação do payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "detail": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno no servidor"
                     }
                 }
             }
