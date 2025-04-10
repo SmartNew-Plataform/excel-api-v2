@@ -1,229 +1,111 @@
-import jsonify
-import xlsxwriter
-import xlsxwriter.utility as xl_util
-import io
-import json
 from io import BytesIO
-
-
-from starlette.responses import StreamingResponse
+import xlsxwriter
 from app.service.tags.tags import add_tags
-from app.service.tags_cell.tags_cell import add_tags_cell
+import logging
 
-def export_record(response):   
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    try:
-        filename = response['filename']
-
-        output = get_output(response)
-
-        return StreamingResponse(output,
-                                 media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                 headers={"Content-Disposition": f"attachment; filename={filename}"})
-    except Exception as e:
-   
-        return jsonify({
-            "message": "Erro ao gravar Excel",
-            "error": str(e),
-            "status": "400"
-        }, 400)
-
-def get_output(response) -> BytesIO:
-
+def export_record(response):
+    logger.info("Iniciando export_record")
     validResponse(response)
+    output = BytesIO()
+    try:
+        wb = xlsxwriter.Workbook(output, {'in_memory': True})
+        for sheet in response['sheets']:
+            logger.info(f"Processando sheet: {sheet['sheetName']}")
+            validSheetName(sheet)
+            ws = wb.add_worksheet(sheet['sheetName'])
+            
+            current_row = 0
 
-    output = io.BytesIO()
+            if 'title' in sheet:
+                title = sheet['title']
+                if not isinstance(title, dict):
+                    raise ValueError("'title' deve ser um dicionário. Exemplo: {'text': 'Título', 'mergeColumns': 5, 'style': {...}}")
+                title_text = title.get('text', '')
+                merge_columns = title.get('mergeColumns', 1)
+                if not isinstance(merge_columns, int) or merge_columns < 1:
+                    raise ValueError("'mergeColumns' deve ser um inteiro maior ou igual a 1")
 
-    wb = xlsxwriter.Workbook(output, {'in_memory': True})
+                title_style = title.get('style', {})
+                title_format = wb.add_format({
+                    'bold': title_style.get('bold', True),
+                    'font_size': title_style.get('fontSize', 16),
+                    'font_color': title_style.get('fontColor', '#000000'),
+                    'bg_color': title_style.get('bgColor', '#FFFFFF'),
+                    'align': title_style.get('align', 'center'),
+                    'valign': title_style.get('valign', 'middle'),
+                })
+                ws.merge_range(current_row, 0, current_row, merge_columns - 1, title_text, title_format)
+                current_row += 1
 
-    createSheets(wb, response['sheets'])
+            records = sheet.get('records', [])
+            records_format = sheet.get('records_format', [])
+            format_table = sheet.get('format_table', {})
+            tags = sheet.get('tags', {})
 
-    wb.close()
+            header_style = sheet.get('headerStyle', {})
+            header_format = wb.add_format({
+                'bold': header_style.get('bold', True),
+                'bg_color': header_style.get('bgColor', '#E0E0E0'),
+            })
+            if header_style.get('border', False):
+                header_format.set_border()
+
+            cell_style = sheet.get('cellStyle', {})
+            cell_format = wb.add_format()
+            if cell_style.get('border', False):
+                cell_format.set_border()
+
+            logger.info(f"Records: {records}, Records_format: {records_format}")
+            createRecords(wb, ws, current_row, records, records_format, format_table, header_format, cell_format)
+            add_tags(wb, ws, tags)
+        wb.close()
+    except Exception as e:
+        logger.error(f"Erro ao gerar o Excel: {str(e)}", exc_info=True)
+        raise ValueError(f"Erro ao gerar o Excel: {str(e)}")
     output.seek(0)
-
+    logger.info("Arquivo Excel gerado, tamanho do output: %d bytes", output.getbuffer().nbytes)
+    if output.getbuffer().nbytes < 100:
+        raise ValueError("Arquivo Excel gerado está vazio ou corrompido.")
     return output
 
-def createSheets(wb,sheets):
-    for sheet in sheets:
-        createSheet(wb,sheet)    
-
-def formatCell(wb,format):
-    if not bool(format):
-        return None
-    
-    return wb.add_format(format)
-
-def checkFormat(value, old_format):
-
-    if (
-            isinstance(value, dict) == False
-            or 'format' not in value
-            or 'value' not in value
-    ):
-        return value, old_format, None
-
-    new_value = value['value']
-    new_format = value['format']
-    new_tags = None
-
-    if old_format is not None:
-        old_format.update(new_format)
-        new_format = old_format
-
-    if 'tags' in value:
-        new_tags = value['tags']
-
-    return new_value, new_format, new_tags
-
-def __update_format(format_1, format_2):
-    if format_1 is None and format_2 is None:
-        return None
-
-    if format_1 is not None and format_2 is None:
-        return json.loads(json.dumps(format_1))
-
-    if format_2 is not None and format_1 is None:
-        return json.loads(json.dumps(format_2))
-
-    format_1_copy = json.loads(json.dumps(format_1))
-    format_2_copy = json.loads(json.dumps(format_2))
-    format_1_copy.update(format_2_copy)
-    return format_1_copy
-
-
-def createRecord(wb,ws,records_format,id_row_records,index_record,record,format_table):
-    
-    line = id_row_records + index_record
-
-    format_row = None
-    if len(record) > 0:
-        position_0 = record[0]
-        if (
-                position_0 is not None
-                and isinstance(position_0, dict)
-                and 'format' in position_0
-        ):
-            format_row = position_0['format']
-    format_row = __update_format(format_table,format_row)
-
-    for col, item_record in enumerate(record):
-        if col > 0:
-            value = item_record
-            format = json.loads(json.dumps(records_format[col-1]))
-            format = __update_format(format_row, format)
-
-            tags_cell = None
-            value, format, tags_cell = checkFormat(value, format)
-
-            format_wb = formatCell(wb,format)
-
-            ws.write(line, col-1, value, format_wb)
-
-            if tags_cell is not None:
-                cell_index = xl_util.xl_rowcol_to_cell(line,col-1)
-                add_tags_cell(wb,ws,cell_index,line,col-1,tags_cell)
-                       
-        
-def createRecords(wb,ws,id_row_records,records,records_format,format_table):
-    for index, record in enumerate(records):
-            createRecord(wb,ws,records_format,id_row_records+1,index,record,format_table)
-
-def createRecordHeader(wb,ws,id_row_records,id_col,record_header,format_table_top):
-
-    format_header =  record_header['formatHeader'] if 'formatHeader' in record_header else None
-
-    format_header = __update_format(format_table_top,format_header)
-
-    format_wb = formatCell(wb,format_header)
-
-    ws.write(id_row_records, id_col, record_header['nameHeader'],format_wb)
-
-    if 'tags' in record_header:
-        cell_index = xl_util.xl_rowcol_to_cell(id_row_records,id_col)
-        add_tags_cell(wb,ws,cell_index,id_row_records,id_col,record_header['tags'])
-    
-def createRecordHeaders(wb,ws,idRowRecords,recordHeaders,format_table_top):
-    for index, recordHeader in enumerate(recordHeaders):
-        createRecordHeader(wb,ws,idRowRecords,index,recordHeader,format_table_top)
-
-def createBlock(wb,ws,block):
-
-    validAttributes(block)    
-
-    message = block['message']
-    colBegin = block['colBegin']
-    colEnd = block['colEnd']
-    formatConfig = block['format']
-    
-    ws.merge_range(f"{colBegin}:{colEnd}".upper(), message, formatCell(wb,formatConfig))
-        
-def createBlocks(wb,ws,blocks):
-    for index, block in enumerate(blocks):
-        createBlock(wb,ws,block)
-
-def createHeader(wb,ws,header):
-    if 'blocks' in header:
-        blocks=header['blocks']
-        createBlocks(wb,ws,blocks)
-
-def createHeaders(wb,ws,headers):
-    for index, header in enumerate(headers):
-        createHeader(wb,ws,header)
-
-def createSheet(wb,sheet):
-    validSheetName(sheet)
-    ws = wb.add_worksheet(sheet['sheetName'])
-
-    if not bool(sheet):
-        return 
-    
-    idRowRecords = 0
-    headers = ""
-
-    format_table = None
-    if 'formatTable' in sheet:
-        format_table = sheet['formatTable']
-
-    format_table_top = None
-    if 'formatTableTop' in sheet:
-        format_table_top = sheet['formatTableTop']
-    format_table_top = __update_format(format_table,format_table_top)
-
-    if 'headers' in sheet:
-        headers=sheet['headers']
-        idRowRecords = len(headers)
-    if 'recordHeader' in sheet:
-        records=sheet['recordHeader']
-        createRecordHeaders(wb,ws,idRowRecords,records,format_table_top)
-    if 'records' in sheet and 'recordsFormat' in sheet:
-        records=sheet['records']
-        recordsFormat=sheet['recordsFormat']
-        createRecords(wb,ws,idRowRecords,records,recordsFormat,format_table)
-
-    ws.autofit()
-
-    if 'tags' in sheet:
-        tags=sheet['tags']
-        add_tags(wb,ws,tags)
-
-    if 'headers' in sheet:
-        createHeaders(wb,ws,headers)                
-
-
-def validAttributes(block):
-    attributes = ['message','colBegin','colEnd','format']
-    
-    for attribute in attributes:
-        if attribute not in block:
-            raise Exception(f"attribute {attribute} not found")    
-
 def validResponse(response):
-    attributes = ['filename','sheets']
-    
-    for attribute in attributes:
+    required_attributes = ['filename', 'sheets']
+    for attribute in required_attributes:
         if attribute not in response:
-            raise Exception(f"body not attribute '{attribute}' ")
+            raise ValueError(f"O corpo da requisição não contém o atributo obrigatório '{attribute}'")
 
 def validSheetName(sheet):
     if 'sheetName' not in sheet:
-        raise Exception("attribute sheetName not found")
+        raise ValueError("O atributo 'sheetName' é obrigatório em cada planilha")
+    if not isinstance(sheet['sheetName'], str) or not sheet['sheetName'].strip():
+        raise ValueError("O atributo 'sheetName' deve ser uma string não vazia")
+    invalid_chars = ['*', '/', '\\', '[', ']', ':', '?']
+    if any(char in sheet['sheetName'] for char in invalid_chars):
+        raise ValueError(f"'sheetName' contém caracteres inválidos: {invalid_chars}. Sheet: {sheet}")
+
+def createRecords(wb, ws, id_row_records, records, records_format, format_table, header_format, cell_format):
+    if not records:
+        logger.info("Nenhum record para processar")
+        return
+    expected_columns = len(records_format) if records_format else len(records[0])
+    logger.info(f"Expected columns: {expected_columns}")
+    for index, record in enumerate(records):
+        if len(record) != expected_columns:
+            raise ValueError(
+                f"Registro na linha {index + 1} tem {len(record)} colunas, esperado {expected_columns}. Registro: {record}"
+            )
+        createRecord(wb, ws, records_format, id_row_records, index, record, format_table, header_format if index == 0 else cell_format)
+
+def createRecord(wb, ws, records_format, id_row_records, index, record, format_table, cell_format):
+    row = id_row_records + index
+    logger.info(f"Escrevendo record na linha {row}: {record}")
+    for col, value in enumerate(record):
+        logger.info(f"Escrevendo na linha {row}, coluna {col}: {value} (tipo: {type(value)})")
+        try:
+            ws.write(row, col, value, cell_format)
+        except Exception as e:
+            logger.error(f"Erro ao escrever na linha {row}, coluna {col}: {str(e)}")
+            raise ValueError(f"Erro ao escrever na linha {row}, coluna {col}: {str(e)}")
