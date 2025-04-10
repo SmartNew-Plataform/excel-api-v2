@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import yaml
-from app.routers import export, home  # Verifique se isso está correto
+from app.routers import export, home 
 
 app = FastAPI()
 
