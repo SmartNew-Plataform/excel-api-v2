@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter()
 
-@router.get("/")
+@router.api_route("/", methods=['GET', 'HEAD'])
 async def welcome():
     html_content = """
     <html>
