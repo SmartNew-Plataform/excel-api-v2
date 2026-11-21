@@ -1,4 +1,4 @@
-FROM python:3.10.18-slim@sha256:420fbb0e468d3eaf0f7e93ea6f7a48792cbcadc39d43ac95b96bee2afe4367da AS base
+FROM python:3.13.18-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 AS base
 WORKDIR /app
 RUN apt update -y && apt install -y wget
 RUN pip install uvicorn
